@@ -1,0 +1,6 @@
+[
+  { "id": 1, "label": "P1 urgente", "order": 1000 },
+  { "id": 2, "label": "P2 importante", "order": 2000 },
+  { "id": 3, "label": "P3 normal", "order": 3000 },
+  { "id": 4, "label": "P4 quando der", "order": 4000 }
+]

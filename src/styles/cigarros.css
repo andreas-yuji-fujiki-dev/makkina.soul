@@ -1,0 +1,25 @@
+.cig-panel h2 { font-family: var(--display); font-size: 22px; margin: 0; }
+.cig-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.cig-row input { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 0; padding: 7px 10px; }
+.eyebrow { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+.cig-today-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.cig-limit { font-size: 14px; color: var(--muted); }
+.cig-counter { display: flex; align-items: center; justify-content: center; gap: 24px; padding-block: 8px; }
+.cig-counter button { font: inherit; font-size: 28px; font-weight: 700; width: 56px; height: 56px; border-radius: 0; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+.cig-counter div { text-align: center; min-width: 120px; }
+.cig-counter strong { font-family: var(--display); font-weight: 800; font-size: 64px; line-height: 1; font-variant-numeric: tabular-nums; display: block; }
+.cig-counter span { color: var(--muted); font-size: 14px; }
+.cig-counter.over strong { color: var(--warn); }
+.cig-msg { margin: 0; text-align: center; color: var(--muted); font-size: 14px; }
+.cig-days { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; }
+.cig-cell { background: var(--surface); border: 1px solid var(--line); border-radius: 0; padding: 6px; text-align: center; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cig-cell b { display: block; font-size: 16px; color: var(--fg); }
+.cig-cell.ok { border-color: var(--done); }
+.cig-cell.ok b { color: var(--done); }
+.cig-cell.over { border-color: var(--warn); }
+.cig-cell.over b { color: var(--warn); }
+.cig-cell.today { outline: 2px solid var(--accent); outline-offset: 1px; }
+.cig-cell.future { opacity: .6; }
+.cig-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.reset { font: inherit; font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 0; padding: 6px 12px; cursor: pointer; }
+.reset.confirm { color: var(--surface); background: var(--p1); border-color: var(--p1); }

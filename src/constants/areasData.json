@@ -1,0 +1,11 @@
+[
+  { "id": "Emprego", "label": "Emprego", "order": 1000, "defaultPrio": 1 },
+  { "id": "Saúde", "label": "Saúde", "order": 2000, "defaultPrio": 2 },
+  { "id": "Grana", "label": "Grana", "order": 3000, "defaultPrio": 3 },
+  { "id": "Faculdade", "label": "Faculdade", "order": 4000, "defaultPrio": 3 },
+  { "id": "Estudo", "label": "Estudo", "order": 5000, "defaultPrio": 3 },
+  { "id": "Leitura", "label": "Leitura", "order": 6000, "defaultPrio": 4 },
+  { "id": "Conteúdo", "label": "Conteúdo", "order": 7000, "defaultPrio": 4 },
+  { "id": "Cultura", "label": "Cultura", "order": 8000, "defaultPrio": 4 },
+  { "id": "Outros", "label": "Outros", "order": 9000, "defaultPrio": 4 }
+]

@@ -1,0 +1,18 @@
+[
+  {
+    "id": "todo",
+    "label": "A fazer",
+    "order": 2500
+  },
+  {
+    "id": "doing",
+    "label": "Fazendo",
+    "order": 3750,
+    "wipLimit": 3
+  },
+  {
+    "id": "done",
+    "label": "Feito",
+    "order": 4750
+  }
+]

@@ -1,0 +1,50 @@
+form.add { display: flex; flex-wrap: wrap; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 0; padding: 12px; }
+form.add input, form.add select { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 0; padding: 8px 10px; }
+form.add #f-title { flex: 1 1 240px; min-width: 0; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.filters button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 0; padding: 4px 12px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.filters button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+@media (max-width: 760px) { .board { grid-template-columns: 1fr; } }
+.col { background: var(--sunken); border-radius: 0; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.col.dragging-col { opacity: .4; }
+.col.drop-before-col { box-shadow: inset 3px 0 0 var(--accent); }
+.col.drop-after-col { box-shadow: inset -3px 0 0 var(--accent); }
+.col-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; cursor: grab; }
+.col-head h2 { font-family: var(--display); font-weight: 800; font-size: 18px; margin: 0; cursor: text; }
+.col-head input { font-family: var(--display); font-weight: 800; font-size: 18px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); padding: 2px 6px; min-width: 0; flex: 1; }
+.col-head span { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.col-head span.full { color: var(--warn); font-weight: 700; }
+.hint { font-size: 13px; color: var(--muted); margin: -4px 0 0; }
+.cards { display: flex; flex-direction: column; gap: 8px; }
+.empty { font-size: 14px; color: var(--muted); padding: 12px; border: 1px dashed var(--line); border-radius: 0; text-align: center; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--p4); border-radius: 0; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0; cursor: grab; }
+.card.dragging { opacity: .4; cursor: grabbing; }
+.drop-indicator { height: 3px; margin: -5px 0 -3px; border-radius: 0; background: var(--accent); }
+.card[data-p="1"] { border-left-color: var(--p1); }
+.card[data-p="2"] { border-left-color: var(--p2); }
+.card[data-p="3"] { border-left-color: var(--p3); }
+.card .meta { display: flex; gap: 6px; flex-wrap: wrap; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.card .meta .pr { color: var(--fg); }
+.card b { font-weight: 700; overflow-wrap: anywhere; }
+.card small { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.col[data-col="done"] .card b { text-decoration: line-through; color: var(--muted); }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.actions button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 0; padding: 3px 10px; cursor: pointer; }
+.actions button:disabled { opacity: .45; cursor: not-allowed; }
+.actions .del { color: var(--muted); }
+.actions .edit { margin-left: auto; }
+
+.taxonomy-list { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.taxonomy-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.taxonomy-list li small { color: var(--muted); }
+.taxonomy-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.taxonomy-row-actions button, .taxonomy-edit-row button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 0; padding: 3px 10px; cursor: pointer; }
+.taxonomy-row-actions .del { color: var(--muted); }
+.taxonomy-edit-row { display: flex; gap: 6px; flex: 1; align-items: center; }
+.taxonomy-edit-row input, .taxonomy-edit-row select { font: inherit; flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--bg); color: var(--fg); padding: 6px 8px; }
+.taxonomy-add-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.taxonomy-add-row input, .taxonomy-add-row select { font: inherit; border: 1px solid var(--line); background: var(--bg); color: var(--fg); padding: 6px 8px; flex: 1; min-width: 0; }

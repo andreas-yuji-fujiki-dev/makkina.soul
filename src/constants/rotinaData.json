@@ -1,0 +1,238 @@
+[
+  {
+    "id": "grp-comeco",
+    "g": "Começo do dia",
+    "order": 15.15151515151515
+  },
+  {
+    "id": "acordar",
+    "t": "Acordar no horário",
+    "s": "Inclusive no fim de semana",
+    "d": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "order": 30.3030303030303
+  },
+  {
+    "id": "higiene",
+    "t": "Higiene",
+    "s": "",
+    "d": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "order": 45.45454545454545
+  },
+  {
+    "id": "alongamento",
+    "t": "Alongamento",
+    "s": "",
+    "d": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "order": 60.6060606060606
+  },
+  {
+    "id": "cafe",
+    "t": "Comer",
+    "s": "E encher a garrafinha de água",
+    "d": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "order": 75.75757575757575
+  },
+  {
+    "id": "grp-blocos",
+    "g": "Blocos do dia",
+    "order": 90.9090909090909
+  },
+  {
+    "id": "cog1",
+    "t": "Trabalho cognitivo 1",
+    "s": "Seg/qua candidaturas · ter/qui/sex PHP · sáb teste técnico · dom revisão do kanban",
+    "d": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "order": 181.8181818181818
+  },
+  {
+    "id": "academia",
+    "t": "Academia",
+    "s": "Seg, qua e sex",
+    "d": [
+      0,
+      2,
+      4
+    ],
+    "order": 272.72727272727275
+  },
+  {
+    "id": "limpeza",
+    "t": "Limpeza",
+    "s": "Louça, fogão, o que precisar",
+    "d": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "order": 363.6363636363636
+  },
+  {
+    "id": "roupa",
+    "t": "Lavar roupa",
+    "s": "Ter e sex",
+    "d": [
+      1,
+      4
+    ],
+    "order": 454.5454545454545
+  },
+  {
+    "id": "faxina",
+    "t": "Faxina",
+    "s": "Sábado",
+    "d": [
+      5
+    ],
+    "order": 545.4545454545455
+  },
+  {
+    "id": "cog2",
+    "t": "Trabalho cognitivo 2",
+    "s": "Ter/qui faculdade · outros dias, cartão do topo do kanban",
+    "d": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "order": 636.3636363636364
+  },
+  {
+    "id": "alimentacao",
+    "t": "Alimentação",
+    "s": "",
+    "d": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "order": 727.2727272727273
+  },
+  {
+    "id": "cozinhar",
+    "t": "Cozinhar",
+    "s": "Qua, sex e dom",
+    "d": [
+      2,
+      4,
+      6
+    ],
+    "order": 818.1818181818181
+  },
+  {
+    "id": "cog3",
+    "t": "Trabalho cognitivo 3",
+    "s": "Cartão do topo do kanban",
+    "d": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "order": 909.090909090909
+  },
+  {
+    "id": "grp-fim",
+    "g": "Fim do dia",
+    "order": 16000
+  },
+  {
+    "id": "cultura",
+    "t": "Investimento cultural + alimentação",
+    "s": "Leitura, filme, série ou anime da fila",
+    "d": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "order": 17000
+  },
+  {
+    "id": "agua",
+    "t": "Bebi água durante o dia",
+    "s": "",
+    "d": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "order": 18000
+  },
+  {
+    "id": "sono",
+    "t": "Dormir no horário",
+    "s": "Mesmo horário todo dia",
+    "d": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "order": 19000
+  }
+]

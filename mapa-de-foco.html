@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mapa de Foco do Andreas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: duas abas. Kanban = tarefas únicas em 3 colunas (empilham no celular). Rotina = grade semanal de hábitos recorrentes. */
+:root {
+  --bg: #f3f4f8; --surface: #ffffff; --sunken: #e9ebf2; --fg: #171a2b; --muted: #5c6178;
+  --line: #dcdfe9; --accent: #4b3fd8; --accent-soft: #e8e6fd; --done: #2f8f5b; --warn: #b4521d;
+  --p1: #c4314b; --p2: #c7741a; --p3: #3a6fd0; --p4: #7a7f96;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1120; --surface: #181b2e; --sunken: #131527; --fg: #e9eaf3; --muted: #9a9fb8;
+    --line: #2a2e47; --accent: #9d94ff; --accent-soft: #262457; --done: #5fcf8f; --warn: #f0a070;
+    --p1: #ff7088; --p2: #f5a54a; --p3: #79a6ff; --p4: #9a9fb8; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1120; --surface: #181b2e; --sunken: #131527; --fg: #e9eaf3; --muted: #9a9fb8;
+  --line: #2a2e47; --accent: #9d94ff; --accent-soft: #262457; --done: #5fcf8f; --warn: #f0a070;
+  --p1: #ff7088; --p2: #f5a54a; --p3: #79a6ff; --p4: #9a9fb8; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; padding-inline: 16px; padding-block: 24px 64px; }
+.wrap { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+header { display: flex; flex-direction: column; gap: 6px; }
+h1 { font-family: var(--display); font-weight: 800; font-size: clamp(28px, 5vw, 38px); line-height: 1.05; margin: 0; text-wrap: balance; }
+.lede { color: var(--muted); margin: 0; max-width: 64ch; }
+.notice { background: var(--accent-soft); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+
+.tabs { display: flex; gap: 4px; background: var(--sunken); padding: 4px; border-radius: 10px; align-self: flex-start; }
+.tabs button { font: inherit; font-weight: 700; border: 0; background: none; color: var(--muted); padding: 8px 16px; border-radius: 7px; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+form.add { display: flex; flex-wrap: wrap; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+form.add input, form.add select { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+form.add #f-title { flex: 1 1 240px; min-width: 0; }
+.btn { font: inherit; font-weight: 700; background: var(--accent); color: var(--surface); border: 0; border-radius: 8px; padding: 8px 16px; cursor: pointer; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.filters button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px; padding: 4px 12px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.filters button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+@media (max-width: 760px) { .board { grid-template-columns: 1fr; } }
+.col { background: var(--sunken); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.col-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.col-head h2 { font-family: var(--display); font-weight: 800; font-size: 18px; margin: 0; }
+.col-head span { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.col-head span.full { color: var(--warn); font-weight: 700; }
+.hint { font-size: 13px; color: var(--muted); margin: -4px 0 0; }
+.cards { display: flex; flex-direction: column; gap: 8px; }
+.empty { font-size: 14px; color: var(--muted); padding: 12px; border: 1px dashed var(--line); border-radius: 10px; text-align: center; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--p4); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.card[data-p="1"] { border-left-color: var(--p1); }
+.card[data-p="2"] { border-left-color: var(--p2); }
+.card[data-p="3"] { border-left-color: var(--p3); }
+.card .meta { display: flex; gap: 6px; flex-wrap: wrap; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.card .meta .pr { color: var(--fg); }
+.card b { font-weight: 700; overflow-wrap: anywhere; }
+.card small { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.col[data-col="done"] .card b { text-decoration: line-through; color: var(--muted); }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.actions button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 6px; padding: 3px 10px; cursor: pointer; }
+.actions button:disabled { opacity: .45; cursor: not-allowed; }
+.actions .del { margin-left: auto; color: var(--muted); }
+.actions .del.confirm { color: var(--surface); background: var(--p1); border-color: var(--p1); }
+
+.week-nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.week-nav h2 { font-family: var(--display); font-size: 20px; margin: 0; font-variant-numeric: tabular-nums; }
+.week-nav button { font: inherit; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.grid-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 560px; }
+th, td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: center; }
+th { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+th.today, td.today { background: var(--accent-soft); }
+td.habit { text-align: left; padding-left: 14px; min-width: 190px; }
+td.habit b { display: block; font-weight: 700; }
+td.habit small { color: var(--muted); font-size: 12px; }
+tr:last-child td { border-bottom: 0; }
+td input { width: 20px; height: 20px; accent-color: var(--done); cursor: pointer; }
+td.off { color: var(--line); }
+.score { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+tr.group td { text-align: left; padding: 10px 14px 4px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--sunken); }
+
+.cig-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.cig-panel h2 { font-family: var(--display); font-size: 22px; margin: 0; }
+.cig-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.cig-row input { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+.eyebrow { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+.cig-today-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.cig-limit { font-size: 14px; color: var(--muted); }
+.cig-counter { display: flex; align-items: center; justify-content: center; gap: 24px; padding-block: 8px; }
+.cig-counter button { font: inherit; font-size: 28px; font-weight: 700; width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+.cig-counter div { text-align: center; min-width: 120px; }
+.cig-counter strong { font-family: var(--display); font-weight: 800; font-size: 64px; line-height: 1; font-variant-numeric: tabular-nums; display: block; }
+.cig-counter span { color: var(--muted); font-size: 14px; }
+.cig-counter.over strong { color: var(--warn); }
+.cig-msg { margin: 0; text-align: center; color: var(--muted); font-size: 14px; }
+.cig-days { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; }
+.cig-cell { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px; text-align: center; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cig-cell b { display: block; font-size: 16px; color: var(--fg); }
+.cig-cell.ok { border-color: var(--done); }
+.cig-cell.ok b { color: var(--done); }
+.cig-cell.over { border-color: var(--warn); }
+.cig-cell.over b { color: var(--warn); }
+.cig-cell.today { outline: 2px solid var(--accent); outline-offset: 1px; }
+.cig-cell.future { opacity: .6; }
+.cig-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.reset { font: inherit; font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.reset.confirm { color: var(--surface); background: var(--p1); border-color: var(--p1); }
+
+.flow-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.flow { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; counter-reset: step; }
+.flow li { counter-increment: step; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); align-items: start; }
+.flow li:first-child { border-top: 0; }
+.flow li::before { content: counter(step); font-family: var(--display); font-weight: 800; font-size: 14px; color: var(--accent); background: var(--accent-soft); border-radius: 50%; width: 26px; height: 26px; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+.flow li.cog::before { background: var(--accent); color: var(--surface); }
+.flow b { display: block; }
+.flow small { color: var(--muted); font-size: 13px; }
+.flow .extra { color: var(--fg); font-weight: 700; }
+.ov-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 560px) { .ov-tiles { grid-template-columns: 1fr; } }
+.ov-tile { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ov-tile span { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.ov-tile strong { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.ov-tile small { color: var(--muted); font-size: 13px; }
+.ov-weeks { display: flex; flex-direction: column; gap: 8px; }
+.ov-week { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) auto auto; gap: 14px; align-items: center; }
+@media (max-width: 640px) { .ov-week { grid-template-columns: 1fr 1fr; } .ov-week .ov-bar-wrap { grid-column: 1 / -1; order: 3; } }
+.ov-week.current { border-color: var(--accent); }
+.ov-week.future { opacity: .55; }
+.ov-week b { display: block; font-variant-numeric: tabular-nums; }
+.ov-week small, .ov-stat small { color: var(--muted); font-size: 12px; }
+.ov-stat { text-align: right; font-variant-numeric: tabular-nums; min-width: 84px; }
+.ov-stat b { font-size: 18px; }
+.ov-bar-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ov-bar { flex: 1; height: 10px; background: var(--sunken); border-radius: 999px; overflow: hidden; }
+.ov-bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.ov-bar-wrap span { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 38px; text-align: right; }
+.ov-h3 { font-family: var(--display); font-size: 18px; margin: 0; }
+.ov-habits { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px 20px; }
+.ov-habit { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ov-habit div:first-child { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.ov-habit div:first-child span { color: var(--muted); font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <h1>Uma coisa de cada vez</h1>
+    <p class="lede">Kanban para o que tem fim. Rotina para o que se repete. No "Fazendo" cabem no máximo 3 cartões.</p>
+  </header>
+  <p class="notice" id="notice" hidden></p>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-kanban" aria-selected="true" aria-controls="view-kanban">Kanban</button>
+    <button role="tab" id="tab-rotina" aria-selected="false" aria-controls="view-rotina">Rotina</button>
+    <button role="tab" id="tab-cigarros" aria-selected="false" aria-controls="view-cigarros">Cigarros</button>
+    <button role="tab" id="tab-overview" aria-selected="false" aria-controls="view-overview">Overview</button>
+  </div>
+
+  <section id="view-kanban" role="tabpanel" aria-labelledby="tab-kanban" style="display:flex;flex-direction:column;gap:14px">
+    <form class="add" id="add">
+      <input id="f-title" placeholder="Nova tarefa (ex.: mandar currículo pra vaga X)" maxlength="140" required>
+      <select id="f-area" aria-label="Área">
+        <option value="Emprego">Emprego</option><option value="Saúde">Saúde</option><option value="Grana">Grana</option>
+        <option value="Faculdade">Faculdade</option><option value="Estudo">Estudo</option><option value="Leitura">Leitura</option>
+        <option value="Conteúdo">Conteúdo</option><option value="Cultura">Cultura</option><option value="Outros">Outros</option>
+      </select>
+      <select id="f-prio" aria-label="Prioridade">
+        <option value="1">P1 urgente</option><option value="2">P2 importante</option><option value="3">P3 normal</option><option value="4">P4 quando der</option>
+      </select>
+      <button class="btn" type="submit">Adicionar</button>
+    </form>
+    <div class="filters" id="filters" role="group" aria-label="Filtrar por área"></div>
+    <div class="board">
+      <div class="col" data-col="todo"><div class="col-head"><h2>A fazer</h2><span></span></div><p class="hint">Ordenado por prioridade. Pegue sempre o de cima.</p><div class="cards"></div></div>
+      <div class="col" data-col="doing"><div class="col-head"><h2>Fazendo</h2><span></span></div><div class="cards"></div></div>
+      <div class="col" data-col="done"><div class="col-head"><h2>Feito</h2><span></span></div><div class="cards"></div></div>
+    </div>
+  </section>
+
+  <section id="view-rotina" role="tabpanel" aria-labelledby="tab-rotina" hidden style="flex-direction:column;gap:14px">
+    <div class="week-nav">
+      <button type="button" id="prev" aria-label="Semana anterior">←</button>
+      <h2 id="week-label"></h2>
+      <button type="button" id="next" aria-label="Próxima semana">→</button>
+      <span class="score" id="score"></span>
+    </div>
+    <div class="grid-wrap"><table id="grid"></table></div>
+  </section>
+
+  <section id="view-cigarros" role="tabpanel" aria-labelledby="tab-cigarros" hidden style="flex-direction:column;gap:14px">
+    <div id="cig-start" class="cig-panel">
+      <h2>Desmame em 30 dias</h2>
+      <p class="lede">Dia 1: até 30 cigarros. A cada dia, um a menos. Dia 30: só 1. Depois disso, zero.</p>
+      <div class="cig-row">
+        <label for="cig-date">Começar em</label>
+        <input type="date" id="cig-date">
+        <button class="btn" type="button" id="cig-go">Começar o plano</button>
+      </div>
+    </div>
+    <div id="cig-run" hidden style="flex-direction:column;gap:14px">
+      <div class="cig-panel cig-today">
+        <div class="cig-today-head">
+          <span class="eyebrow" id="cig-day"></span>
+          <span class="cig-limit" id="cig-limit"></span>
+        </div>
+        <div class="cig-counter" id="cig-counter">
+          <button type="button" id="cig-minus" aria-label="Tirar um cigarro">−</button>
+          <div><strong id="cig-count">0</strong><span id="cig-of"></span></div>
+          <button type="button" id="cig-plus" aria-label="Registrar um cigarro">+</button>
+        </div>
+        <p class="cig-msg" id="cig-msg"></p>
+      </div>
+      <div class="cig-days" id="cig-days"></div>
+      <div class="cig-foot">
+        <span class="score" id="cig-score"></span>
+        <button type="button" class="reset" id="cig-reset">Recomeçar plano</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-overview" role="tabpanel" aria-labelledby="tab-overview" hidden style="flex-direction:column;gap:14px">
+    <div class="week-nav">
+      <button type="button" id="ov-prev" aria-label="Mês anterior">←</button>
+      <h2 id="ov-label"></h2>
+      <button type="button" id="ov-next" aria-label="Próximo mês">→</button>
+    </div>
+    <div class="ov-tiles" id="ov-tiles"></div>
+    <div class="ov-weeks" id="ov-weeks"></div>
+    <div class="cig-panel">
+      <h3 class="ov-h3">Hábitos no mês</h3>
+      <div class="ov-habits" id="ov-habits"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* Versão local: substitui o armazenamento do Claude por localStorage, com a mesma API (doc/collection/onSnapshot). */
+(function () {
+  var KEY = "mapa-foco-db";
+  var SEED = {"c01": {"area": "Emprego", "col": "todo", "created": 1791792001000, "movedAt": 1791790801000, "note": "Uma página, com resultados do Habilita, e-Catálogos e Me Indica Lá. Depois só adapta por vaga.", "prio": 1, "title": "Aprender a montar currículo e fechar 1 versão base"}, "c02": {"area": "Emprego", "col": "todo", "created": 1791792002000, "movedAt": 1791790802000, "note": "Título: Desenvolvedor Fullstack · PHP, Laravel, JavaScript, React", "prio": 1, "title": "Atualizar LinkedIn com o conteúdo do currículo"}, "c03": {"area": "Emprego", "col": "todo", "created": 1791792003000, "movedAt": 1791790803000, "note": "Entre projetos de estudo, freela, pessoais e com IA. Um deles vai ser o projeto PHP.", "prio": 1, "title": "Escolher 2–3 projetos para o portfólio"}, "c04": {"area": "Emprego", "col": "todo", "created": 1791792004000, "movedAt": 1791790804000, "note": "Problema, stack, prints, como rodar, decisões técnicas. Serve de estudo de caso e documentação.", "prio": 1, "title": "README caprichado em cada projeto do portfólio"}, "c05": {"area": "Emprego", "col": "todo", "created": 1791792005000, "movedAt": 1791790805000, "note": "", "prio": 1, "title": "Criar conta no Wellfound e no Work at a Startup (YC)"}, "c06": {"area": "Emprego", "col": "todo", "created": 1791792006000, "movedAt": 1791790806000, "note": "Anotar empresa, vaga, data e status numa planilha.", "prio": 1, "title": "Fazer candidaturas: meta de 10 por semana"}, "c07": {"area": "Emprego", "col": "todo", "created": 1791792009000, "movedAt": 1791790807000, "note": "2 mensagens curtas por semana, com link de um projeto.", "prio": 1, "title": "Conectar com founders e CTOs"}, "c08": {"area": "Saúde", "col": "todo", "created": 1791792012000, "movedAt": 1791790808000, "note": "Clínico geral, encaminhamento para o dentista e perguntar pelo programa gratuito para parar de fumar.", "prio": 2, "title": "Marcar consulta com clínico geral na UBS"}, "c09": {"area": "Saúde", "col": "todo", "created": 1791792015000, "movedAt": 1791790809000, "note": "Vale também no fim de semana.", "prio": 2, "title": "Arrumar o sono: horário fixo de acordar"}, "c10": {"area": "Faculdade", "col": "todo", "created": 1791792019000, "movedAt": 1791790810000, "note": "Inclui PhpStorm de graça.", "prio": 3, "title": "Levantar recursos de estudante e ativar o GitHub Student Pack"}, "c11": {"area": "Faculdade", "col": "todo", "created": 1791792020000, "movedAt": 1791790811000, "note": "Google Agenda com lembrete.", "prio": 3, "title": "Colocar prazos da faculdade, pagamentos e aniversários na agenda"}, "c12": {"area": "Estudo", "col": "todo", "created": 1791792026000, "movedAt": 1791790812000, "note": "Sem framework. MVC na mão, PDO, Composer e autoload. Escopo pequeno: login, produtos, carrinho, pedidos.", "prio": 3, "title": "Projeto PHP OOP puro: marketplace"}, "c13": {"area": "Estudo", "col": "todo", "created": 1791792027000, "movedAt": 1791790813000, "note": "Rotas, controllers, Eloquent, migrations, validação, autenticação.", "prio": 3, "title": "PHP + Laravel + APIs: o básico do framework"}, "c14": {"area": "Estudo", "col": "todo", "created": 1791792028000, "movedAt": 1791790814000, "note": "Front em JS, testes (Pest/PHPUnit), Docker e CI. Depois vira a ferramenta pro teu pai.", "prio": 3, "title": "Projeto Laravel: app de tracking financeiro"}, "c15": {"area": "Grana", "col": "todo", "created": 1791792022000, "movedAt": 1791790815000, "note": "Começar por 2 bem feitas, depois expandir.", "prio": 3, "title": "Cadastro nas plataformas de freela e pegar freelas"}, "c16": {"area": "Grana", "col": "todo", "created": 1791792023000, "movedAt": 1791790816000, "note": "Usar um mês para você, depois montar a do teu pai com o mesmo modelo.", "prio": 3, "title": "Planilha simples de entradas e saídas"}, "c17": {"area": "Grana", "col": "todo", "created": 1791792025000, "movedAt": 1791790817000, "note": "", "prio": 3, "title": "Lista de compras mensal fixa"}, "c18": {"area": "Outros", "col": "todo", "created": 1791792037000, "movedAt": 1791791000000, "note": "Depois dos projetos PHP prontos, para ter o que mostrar.", "prio": 4, "title": "Site portfólio + blog (um projeto só)"}, "c19": {"area": "Outros", "col": "todo", "created": 1791792073000, "movedAt": 1791791001000, "note": "", "prio": 4, "title": "Discord bot + comunidade tech"}, "c20": {"area": "Leitura", "col": "todo", "created": 1791792066000, "movedAt": 1791791002000, "note": "Um livro por vez, como leitura de lazer.", "prio": 4, "title": "Escolher 1 livro introdutório de política"}, "c21": {"area": "Saúde", "col": "todo", "created": 1791792016000, "movedAt": 1791791100000, "note": "Para beber água regularmente.", "prio": 2, "title": "Comprar garrafinha de água para a mesa"}, "n01": {"area": "Emprego", "col": "todo", "created": 1791792007000, "movedAt": 1791792007000, "note": "1 simulação por semana. Pode ser comigo.", "prio": 1, "title": "Praticar entrevistas"}, "n02": {"area": "Emprego", "col": "todo", "created": 1791792008000, "movedAt": 1791792008000, "note": "1 por semana, com prazo de 1 dia.", "prio": 1, "title": "Praticar testes técnicos"}, "n03": {"area": "Emprego", "col": "todo", "created": 1791792010000, "movedAt": 1791792010000, "note": "Habilita e e-Catálogos.", "prio": 1, "title": "Pedir recomendações a ex-colegas no LinkedIn"}, "n04": {"area": "Emprego", "col": "todo", "created": 1791792011000, "movedAt": 1791792011000, "note": "Vai pro currículo, LinkedIn e portfólio.", "prio": 1, "title": "Montar lista de skills"}, "n05": {"area": "Saúde", "col": "todo", "created": 1791792013000, "movedAt": 1791792013000, "note": "Não precisa juntar dinheiro antes: o SUS atende pela UBS. Pede o encaminhamento na consulta.", "prio": 2, "title": "Tratar os dentes"}, "n06": {"area": "Saúde", "col": "todo", "created": 1791792014000, "movedAt": 1791792014000, "note": "Aba Cigarros: 30 dias, de 30 até 1.", "prio": 2, "title": "Começar o desmame e parar de fumar"}, "n07": {"area": "Saúde", "col": "todo", "created": 1791792017000, "movedAt": 1791792017000, "note": "A frequência fica marcada na aba Rotina.", "prio": 2, "title": "Escolher academia e começar 3x por semana"}, "n08": {"area": "Saúde", "col": "todo", "created": 1791792018000, "movedAt": 1791792018000, "note": "Planejar o que cozinhar nos dias de cozinha.", "prio": 3, "title": "Organizar alimentação"}, "n09": {"area": "Faculdade", "col": "todo", "created": 1791792021000, "movedAt": 1791792021000, "note": "", "prio": 3, "title": "Estudos da faculdade com NotebookLM"}, "n10": {"area": "Grana", "col": "todo", "created": 1791792024000, "movedAt": 1791792024000, "note": "Depois de usar a planilha por 1 mês.", "prio": 3, "title": "Ajudar meu pai a ter visão das finanças"}, "n11": {"area": "Estudo", "col": "todo", "created": 1791792029000, "movedAt": 1791792029000, "note": "", "prio": 3, "title": "CI/CD com GitHub Actions"}, "n12": {"area": "Estudo", "col": "todo", "created": 1791792030000, "movedAt": 1791792030000, "note": "", "prio": 3, "title": "Docker operacional"}, "n13": {"area": "Estudo", "col": "todo", "created": 1791792031000, "movedAt": 1791792031000, "note": "Aplicar refatorando o marketplace.", "prio": 3, "title": "Clean Code"}, "n14": {"area": "Estudo", "col": "todo", "created": 1791792032000, "movedAt": 1791792032000, "note": "", "prio": 3, "title": "SOLID"}, "n15": {"area": "Estudo", "col": "todo", "created": 1791792033000, "movedAt": 1791792033000, "note": "", "prio": 3, "title": "Design patterns"}, "n16": {"area": "Estudo", "col": "todo", "created": 1791792034000, "movedAt": 1791792034000, "note": "", "prio": 3, "title": "Postgres a fundo"}, "n17": {"area": "Estudo", "col": "todo", "created": 1791792035000, "movedAt": 1791792035000, "note": "Grátis pelo Student Pack.", "prio": 3, "title": "Aprender PhpStorm"}, "n18": {"area": "Estudo", "col": "todo", "created": 1791792036000, "movedAt": 1791792036000, "note": "Para a carreira internacional.", "prio": 3, "title": "Inglês: DIO English"}, "n19": {"area": "Emprego", "col": "todo", "created": 1791792038000, "movedAt": 1791792038000, "note": "", "prio": 4, "title": "Portfólio: lista de livros já lidos"}, "n20": {"area": "Emprego", "col": "todo", "created": 1791792039000, "movedAt": 1791792039000, "note": "", "prio": 4, "title": "Portfólio: progresso da faculdade"}, "n21": {"area": "Emprego", "col": "todo", "created": 1791792040000, "movedAt": 1791792040000, "note": "", "prio": 4, "title": "Portfólio: cursos feitos"}, "n22": {"area": "Emprego", "col": "todo", "created": 1791792041000, "movedAt": 1791792041000, "note": "", "prio": 4, "title": "Portfólio: projetos com IA e IAs que sei usar"}, "n23": {"area": "Emprego", "col": "todo", "created": 1791792042000, "movedAt": 1791792042000, "note": "", "prio": 4, "title": "Portfólio: distros Linux que já usei"}, "n24": {"area": "Emprego", "col": "todo", "created": 1791792043000, "movedAt": 1791792043000, "note": "", "prio": 4, "title": "Portfólio: gostos pessoais fora do código"}, "n25": {"area": "Estudo", "col": "todo", "created": 1791792044000, "movedAt": 1791792044000, "note": "", "prio": 4, "title": "Estudar Linux para devs"}, "n26": {"area": "Estudo", "col": "todo", "created": 1791792045000, "movedAt": 1791792045000, "note": "", "prio": 4, "title": "Método Fabio Akita para programar com IA"}, "n27": {"area": "Estudo", "col": "todo", "created": 1791792046000, "movedAt": 1791792046000, "note": "", "prio": 4, "title": "Aprender WebStorm"}, "n28": {"area": "Estudo", "col": "todo", "created": 1791792047000, "movedAt": 1791792047000, "note": "", "prio": 4, "title": "Clean architecture"}, "n29": {"area": "Estudo", "col": "todo", "created": 1791792048000, "movedAt": 1791792048000, "note": "", "prio": 4, "title": "Lean"}, "n30": {"area": "Estudo", "col": "todo", "created": 1791792049000, "movedAt": 1791792049000, "note": "", "prio": 4, "title": "Microsserviços"}, "n31": {"area": "Estudo", "col": "todo", "created": 1791792050000, "movedAt": 1791792050000, "note": "", "prio": 4, "title": "Arquitetura distribuída"}, "n32": {"area": "Estudo", "col": "todo", "created": 1791792051000, "movedAt": 1791792051000, "note": "", "prio": 4, "title": "Java + Spring Boot"}, "n33": {"area": "Estudo", "col": "todo", "created": 1791792052000, "movedAt": 1791792052000, "note": "", "prio": 4, "title": "C# + .NET"}, "n34": {"area": "Estudo", "col": "todo", "created": 1791792053000, "movedAt": 1791792053000, "note": "", "prio": 4, "title": "Aprender matemática"}, "n35": {"area": "Estudo", "col": "todo", "created": 1791792054000, "movedAt": 1791792054000, "note": "", "prio": 4, "title": "Ler o livro de algoritmos dos ratos"}, "n36": {"area": "Estudo", "col": "todo", "created": 1791792055000, "movedAt": 1791792055000, "note": "", "prio": 4, "title": "Cybersec: Solyd Basics (gratuito)"}, "n37": {"area": "Estudo", "col": "todo", "created": 1791792056000, "movedAt": 1791792056000, "note": "", "prio": 4, "title": "Cybersec: PortSwigger"}, "n38": {"area": "Estudo", "col": "todo", "created": 1791792057000, "movedAt": 1791792057000, "note": "", "prio": 4, "title": "Cybersec: HackTheBox"}, "n39": {"area": "Estudo", "col": "todo", "created": 1791792058000, "movedAt": 1791792058000, "note": "", "prio": 4, "title": "Certificação: CS50 (Harvard / edX)"}, "n40": {"area": "Estudo", "col": "todo", "created": 1791792059000, "movedAt": 1791792059000, "note": "", "prio": 4, "title": "Certificações GitHub"}, "n41": {"area": "Estudo", "col": "todo", "created": 1791792060000, "movedAt": 1791792060000, "note": "", "prio": 4, "title": "Certificação de desenvolvimento com IA"}, "n42": {"area": "Estudo", "col": "todo", "created": 1791792061000, "movedAt": 1791792061000, "note": "", "prio": 4, "title": "Certificação MongoDB"}, "n43": {"area": "Estudo", "col": "todo", "created": 1791792062000, "movedAt": 1791792062000, "note": "", "prio": 4, "title": "Certificação MySQL (DataCamp)"}, "n44": {"area": "Estudo", "col": "todo", "created": 1791792063000, "movedAt": 1791792063000, "note": "", "prio": 4, "title": "Certificações AWS"}, "n45": {"area": "Estudo", "col": "todo", "created": 1791792064000, "movedAt": 1791792064000, "note": "", "prio": 4, "title": "Certificações Google"}, "n46": {"area": "Leitura", "col": "todo", "created": 1791792065000, "movedAt": 1791792065000, "note": "Primeiro da fila: ajuda a estudar todo o resto.", "prio": 4, "title": "Ler Ultralearning"}, "n47": {"area": "Leitura", "col": "todo", "created": 1791792067000, "movedAt": 1791792067000, "note": "", "prio": 4, "title": "Ler A Arte da Guerra"}, "n48": {"area": "Leitura", "col": "todo", "created": 1791792068000, "movedAt": 1791792068000, "note": "", "prio": 4, "title": "Ler Discurso do Método"}, "n49": {"area": "Conteúdo", "col": "todo", "created": 1791792069000, "movedAt": 1791792069000, "note": "", "prio": 4, "title": "Blog post: sobre livros"}, "n50": {"area": "Conteúdo", "col": "todo", "created": 1791792070000, "movedAt": 1791792070000, "note": "", "prio": 4, "title": "Blog post: sobre programação"}, "n51": {"area": "Conteúdo", "col": "todo", "created": 1791792071000, "movedAt": 1791792071000, "note": "", "prio": 4, "title": "Blog post: sobre ferramentas"}, "n52": {"area": "Conteúdo", "col": "todo", "created": 1791792072000, "movedAt": 1791792072000, "note": "", "prio": 4, "title": "Blog post: dicas"}, "n53": {"area": "Cultura", "col": "todo", "created": 1791792074000, "movedAt": 1791792074000, "note": "", "prio": 4, "title": "Assistir Star Wars"}, "n54": {"area": "Cultura", "col": "todo", "created": 1791792075000, "movedAt": 1791792075000, "note": "", "prio": 4, "title": "Assistir Senhor dos Anéis"}, "n55": {"area": "Cultura", "col": "todo", "created": 1791792076000, "movedAt": 1791792076000, "note": "", "prio": 4, "title": "Assistir Game of Thrones"}, "n56": {"area": "Cultura", "col": "todo", "created": 1791792077000, "movedAt": 1791792077000, "note": "", "prio": 4, "title": "Assistir Star Trek"}, "n57": {"area": "Cultura", "col": "todo", "created": 1791792078000, "movedAt": 1791792078000, "note": "", "prio": 4, "title": "Assistir Battlestar Galactica"}, "n58": {"area": "Cultura", "col": "todo", "created": 1791792079000, "movedAt": 1791792079000, "note": "", "prio": 4, "title": "Fazer lista de animes"}, "n59": {"area": "Cultura", "col": "todo", "created": 1791792080000, "movedAt": 1791792080000, "note": "", "prio": 4, "title": "Fazer lista de filmes"}, "n60": {"area": "Cultura", "col": "todo", "created": 1791792081000, "movedAt": 1791792081000, "note": "", "prio": 4, "title": "Fazer lista de séries"}, "n61": {"area": "Cultura", "col": "todo", "created": 1791792082000, "movedAt": 1791792082000, "note": "", "prio": 4, "title": "Escutar e aprender sobre bandas de rock"}, "n62": {"area": "Saúde", "col": "done", "created": 1791792083000, "movedAt": 1791792083000, "note": "Feito: aba Rotina.", "prio": 2, "title": "Montar uma rotina"}, "n63": {"area": "Outros", "col": "done", "created": 1791792084000, "movedAt": 1791792084000, "note": "Feito: é este quadro.", "prio": 3, "title": "Kanban de tarefas da vida"}, "n64": {"area": "Saúde", "col": "done", "created": 1791792085000, "movedAt": 1791792085000, "note": "Feito: marcada na aba Rotina.", "prio": 3, "title": "Organizar frequência na academia"}};
+  var store;
+  try { store = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) {}
+  if (!store) { store = {}; Object.keys(SEED).forEach(function (id) { store["cards/" + id] = SEED[id]; }); }
+  var subs = [];
+  function persist() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+  function snapDoc(path) {
+    var d = store[path];
+    return { id: path.split("/").pop(), exists: !!d, data: function () { return d ? JSON.parse(JSON.stringify(d)) : undefined; }, metadata: { fromCache: false, hasPendingWrites: false } };
+  }
+  function snapCol(col) {
+    var docs = Object.keys(store).filter(function (p) { var s = p.split("/"); return s.length === 2 && s[0] === col; }).sort().map(snapDoc);
+    return { docs: docs, size: docs.length, empty: !docs.length, docChanges: function () { return []; }, metadata: { fromCache: false, hasPendingWrites: false } };
+  }
+  function emit() { persist(); subs.forEach(function (s) { setTimeout(function () { s.fn(s.col ? snapCol(s.col) : snapDoc(s.path)); }, 0); }); }
+  function docRef(path) {
+    return {
+      id: path.split("/").pop(), path: path,
+      get: function () { return Promise.resolve(snapDoc(path)); },
+      set: function (d) { store[path] = JSON.parse(JSON.stringify(d)); emit(); return Promise.resolve(); },
+      update: function (d) { if (!store[path]) return Promise.reject({ code: "invalid_argument" }); Object.assign(store[path], JSON.parse(JSON.stringify(d))); emit(); return Promise.resolve(); },
+      delete: function () { delete store[path]; emit(); return Promise.resolve(); },
+      onSnapshot: function (fn) { var s = { path: path, fn: fn }; subs.push(s); setTimeout(function () { fn(snapDoc(path)); }, 0); return function () { subs = subs.filter(function (x) { return x !== s; }); }; }
+    };
+  }
+  var db = {
+    doc: docRef,
+    collection: function (col) {
+      return {
+        path: col,
+        doc: function (id) { return docRef(col + "/" + (id || Math.random().toString(36).slice(2, 12))); },
+        add: function (d) { var r = docRef(col + "/" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)); return r.set(d).then(function () { return r; }); },
+        get: function () { return Promise.resolve(snapCol(col)); },
+        onSnapshot: function (fn) { var s = { col: col, fn: fn }; subs.push(s); setTimeout(function () { fn(snapCol(col)); }, 0); return function () { subs = subs.filter(function (x) { return x !== s; }); }; }
+      };
+    }
+  };
+  window.claude = { use: function (name) { return Promise.resolve(name === "db" ? db : null); } };
+})();
+</script>
+<script>
+(function () {
+  var AREA_PRIO = { "Emprego": 1, "Saúde": 2, "Grana": 3, "Faculdade": 3, "Estudo": 3, "Leitura": 4, "Conteúdo": 4, "Cultura": 4, "Outros": 4 };
+  var areaFilter = "Todas";
+  try { areaFilter = localStorage.getItem("mapa-area") || "Todas"; } catch (e) {}
+  var COL_ORDER = ["todo", "doing", "done"];
+  var DOING_LIMIT = 3;
+  var DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+  /* Na ordem do roteiro combinado: acordar → higiene → alongamento → comer → cognitivo → limpeza → cognitivo → alimentação → cognitivo → cultura + alimentação → sono */
+  var ALL = [0,1,2,3,4,5,6];
+  var HABITS = [
+    { g: "Começo do dia" },
+    { id: "acordar", t: "Acordar no horário", s: "Inclusive no fim de semana", d: ALL },
+    { id: "higiene", t: "Higiene", s: "", d: ALL },
+    { id: "alongamento", t: "Alongamento", s: "", d: ALL },
+    { id: "cafe", t: "Comer", s: "E encher a garrafinha de água", d: ALL },
+    { g: "Blocos do dia" },
+    { id: "cog1", t: "Trabalho cognitivo 1", s: "Seg/qua candidaturas · ter/qui/sex PHP · sáb teste técnico · dom revisão do kanban", d: ALL },
+    { id: "academia", t: "Academia", s: "Seg, qua e sex", d: [0,2,4] },
+    { id: "limpeza", t: "Limpeza", s: "Louça, fogão, o que precisar", d: ALL },
+    { id: "roupa", t: "Lavar roupa", s: "Ter e sex", d: [1,4] },
+    { id: "faxina", t: "Faxina", s: "Sábado", d: [5] },
+    { id: "cog2", t: "Trabalho cognitivo 2", s: "Ter/qui faculdade · outros dias, cartão do topo do kanban", d: ALL },
+    { id: "alimentacao", t: "Alimentação", s: "", d: ALL },
+    { id: "cozinhar", t: "Cozinhar", s: "Qua, sex e dom", d: [2,4,6] },
+    { id: "cog3", t: "Trabalho cognitivo 3", s: "Cartão do topo do kanban", d: ALL },
+    { g: "Fim do dia" },
+    { id: "cultura", t: "Investimento cultural + alimentação", s: "Leitura, filme, série ou anime da fila", d: ALL },
+    { id: "agua", t: "Bebi água durante o dia", s: "", d: ALL },
+    { id: "sono", t: "Dormir no horário", s: "Mesmo horário todo dia", d: ALL }
+  ];
+
+  var db = null;
+  var cards = [];
+  var checks = {};
+  var weekOffset = 0;
+  var unsubWeek = null;
+  var pendingDel = null;
+
+  var $ = function (s) { return document.querySelector(s); };
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function showNotice(t) { var n = $("#notice"); n.textContent = t; n.hidden = !t; }
+
+  /* ---------- Tabs ---------- */
+  var TABS = ["kanban", "rotina", "cigarros", "overview"];
+  function setTab(which) {
+    if (TABS.indexOf(which) === -1) which = "kanban";
+    TABS.forEach(function (t) {
+      var on = t === which;
+      $("#tab-" + t).setAttribute("aria-selected", on);
+      var v = $("#view-" + t); v.hidden = !on; v.style.display = on ? "flex" : "";
+    });
+    try { localStorage.setItem("mapa-tab", which); } catch (e) {}
+  }
+  TABS.forEach(function (t) { $("#tab-" + t).addEventListener("click", function () { setTab(t); }); });
+  var startTab = TABS.indexOf(location.hash.slice(1)) > -1 ? location.hash.slice(1) : null;
+  if (!startTab) { try { startTab = localStorage.getItem("mapa-tab"); } catch (e) {} }
+  setTab(startTab);
+
+  /* ---------- Kanban ---------- */
+  $("#f-area").addEventListener("change", function () { $("#f-prio").value = String(AREA_PRIO[this.value] || 3); });
+
+  function renderFilters() {
+    var bar = $("#filters"); bar.textContent = "";
+    var areas = ["Todas"];
+    Object.keys(AREA_PRIO).forEach(function (a) { if (cards.some(function (c) { return c.area === a && c.col !== "done"; })) areas.push(a); });
+    if (areas.indexOf(areaFilter) === -1) areaFilter = "Todas";
+    areas.forEach(function (a) {
+      var n = a === "Todas" ? cards.filter(function (c) { return c.col !== "done"; }).length : cards.filter(function (c) { return c.area === a && c.col !== "done"; }).length;
+      var b = el("button", null, a + " " + n); b.type = "button"; b.setAttribute("aria-pressed", a === areaFilter);
+      b.onclick = function () { areaFilter = a; try { localStorage.setItem("mapa-area", a); } catch (e) {} renderBoard(); };
+      bar.appendChild(b);
+    });
+  }
+  function sorted(col) {
+    var list = cards.filter(function (c) { return c.col === col && (col === "doing" || areaFilter === "Todas" || c.area === areaFilter); });
+    if (col === "done") return list.sort(function (a, b) { return (b.movedAt || 0) - (a.movedAt || 0); });
+    return list.sort(function (a, b) { return (a.prio - b.prio) || ((a.created || 0) - (b.created || 0)); });
+  }
+
+  function renderBoard() {
+    renderFilters();
+    var doingCount = cards.filter(function (c) { return c.col === "doing"; }).length;
+    COL_ORDER.forEach(function (col) {
+      var root = document.querySelector('.col[data-col="' + col + '"]');
+      var list = sorted(col);
+      var head = root.querySelector(".col-head span");
+      head.textContent = col === "doing" ? list.length + " de " + DOING_LIMIT : String(list.length);
+      head.className = col === "doing" && list.length >= DOING_LIMIT ? "full" : "";
+      var box = root.querySelector(".cards");
+      box.textContent = "";
+      if (!list.length) {
+        box.appendChild(el("div", "empty", col === "todo" ? "Nada aqui. Adicione uma tarefa acima." : col === "doing" ? "Puxe até 3 cartões do topo de \"A fazer\"." : "O que você terminar aparece aqui."));
+        return;
+      }
+      list.forEach(function (c) {
+        var card = el("article", "card"); card.dataset.p = c.prio;
+        var meta = el("div", "meta");
+        meta.appendChild(el("span", "pr", "P" + c.prio));
+        meta.appendChild(el("span", null, c.area));
+        card.appendChild(meta);
+        card.appendChild(el("b", null, c.title));
+        if (c.note) card.appendChild(el("small", null, c.note));
+        var act = el("div", "actions");
+        var i = COL_ORDER.indexOf(col);
+        if (i > 0) { var back = el("button", null, "← Voltar"); back.type = "button"; back.onclick = function () { move(c, COL_ORDER[i - 1]); }; act.appendChild(back); }
+        if (i < 2) {
+          var fwd = el("button", null, col === "todo" ? "Começar →" : "Concluir ✓"); fwd.type = "button";
+          if (col === "todo" && doingCount >= DOING_LIMIT) { fwd.disabled = true; fwd.title = "Termine algo em Fazendo primeiro"; }
+          fwd.onclick = function () { move(c, COL_ORDER[i + 1]); };
+          act.appendChild(fwd);
+        }
+        var del = el("button", "del" + (pendingDel === c.id ? " confirm" : ""), pendingDel === c.id ? "Confirmar exclusão" : "Excluir"); del.type = "button";
+        del.onclick = function () { if (pendingDel === c.id) { pendingDel = null; remove(c); } else { pendingDel = c.id; renderBoard(); } };
+        act.appendChild(del);
+        card.appendChild(act);
+        box.appendChild(card);
+      });
+    });
+  }
+
+  function writeErr(e) {
+    if (e && e.code === "quota_exceeded") showNotice("O quadro chegou no limite de armazenamento. Exclua cartões antigos de Feito para liberar espaço.");
+    else showNotice("Não consegui salvar essa mudança. Recarregue a página e tente de novo.");
+  }
+
+  function move(c, col) {
+    if (col === "doing" && c.col !== "doing" && cards.filter(function (x) { return x.col === "doing"; }).length >= DOING_LIMIT) return;
+    c.col = col; c.movedAt = Date.now(); renderBoard();
+    if (db) db.doc("cards/" + c.id).update({ col: col, movedAt: c.movedAt }).catch(writeErr);
+  }
+  function remove(c) {
+    cards = cards.filter(function (x) { return x.id !== c.id; }); renderBoard();
+    if (db) db.doc("cards/" + c.id).delete().catch(writeErr);
+  }
+
+  $("#add").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var title = $("#f-title").value.trim(); if (!title) return;
+    var data = { title: title, note: "", area: $("#f-area").value, prio: Number($("#f-prio").value), col: "todo", created: Date.now(), movedAt: Date.now() };
+    $("#f-title").value = "";
+    if (db) { db.collection("cards").add(data).catch(writeErr); }
+    else { data.id = "local-" + Date.now(); cards.push(data); renderBoard(); }
+  });
+
+  /* ---------- Rotina ---------- */
+  function mondayOf(offset) {
+    var d = new Date(); d.setHours(12, 0, 0, 0);
+    var dow = (d.getDay() + 6) % 7;
+    d.setDate(d.getDate() - dow + offset * 7);
+    return d;
+  }
+  function ymd(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function fmt(d) { return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0"); }
+
+  function renderGrid() {
+    var mon = mondayOf(weekOffset);
+    var sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+    $("#week-label").textContent = (weekOffset === 0 ? "Esta semana · " : "") + fmt(mon) + " a " + fmt(sun);
+    var todayIdx = weekOffset === 0 ? (new Date().getDay() + 6) % 7 : -1;
+    var t = $("#grid"); t.textContent = "";
+    var thead = el("thead"); var hr = el("tr"); hr.appendChild(el("th", null, "Hábito"));
+    DAYS.forEach(function (name, i) {
+      var day = new Date(mon); day.setDate(mon.getDate() + i);
+      var th = el("th", i === todayIdx ? "today" : null); th.appendChild(document.createTextNode(name)); th.appendChild(el("div", null, fmt(day))); hr.appendChild(th);
+    });
+    thead.appendChild(hr); t.appendChild(thead);
+    var tb = el("tbody"); var total = 0, done = 0;
+    HABITS.forEach(function (h) {
+      if (h.g) { var gr = el("tr", "group"); var gc = el("td", null, h.g); gc.colSpan = 8; gr.appendChild(gc); tb.appendChild(gr); return; }
+      var tr = el("tr"); var name = el("td", "habit"); name.appendChild(el("b", null, h.t)); if (h.s) name.appendChild(el("small", null, h.s)); tr.appendChild(name);
+      for (var i = 0; i < 7; i++) {
+        var td = el("td", i === todayIdx ? "today" : null);
+        if (h.d.indexOf(i) === -1) { td.className += " off"; td.textContent = "·"; }
+        else {
+          total++;
+          var key = h.id + "_" + i;
+          var cb = document.createElement("input"); cb.type = "checkbox"; cb.id = "c-" + key; cb.checked = !!checks[key];
+          cb.setAttribute("aria-label", h.t + " " + DAYS[i]);
+          if (cb.checked) done++;
+          (function (k) { cb.addEventListener("change", function () { toggle(k, this.checked); }); })(key);
+          td.appendChild(cb);
+        }
+        tr.appendChild(td);
+      }
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+    $("#score").textContent = done + " de " + total + " feitos";
+  }
+
+
+  function weekDoc() { return db.doc("weeks/" + ymd(mondayOf(weekOffset))); }
+  function toggle(key, val) {
+    checks[key] = val; renderGrid();
+    if (db) weekDoc().set({ checks: Object.assign({}, checks) }).catch(writeErr);
+  }
+  function watchWeek() {
+    if (unsubWeek) { unsubWeek(); unsubWeek = null; }
+    checks = {}; renderGrid();
+    if (!db) return;
+    unsubWeek = weekDoc().onSnapshot(function (snap) {
+      var d = snap.exists ? snap.data() : null;
+      checks = d && d.checks ? Object.assign({}, d.checks) : {};
+      renderGrid();
+    }, function () { showNotice("A rotina parou de sincronizar. Recarregue a página."); });
+  }
+  $("#prev").addEventListener("click", function () { weekOffset--; watchWeek(); });
+  $("#next").addEventListener("click", function () { weekOffset++; watchWeek(); });
+
+  /* ---------- Cigarros ---------- */
+  var PLAN_DAYS = 30;
+  var cig = { start: null, counts: {} };
+  var cigTimer = null, cigResetArmed = false;
+  function limitFor(n) { return Math.max(PLAN_DAYS + 1 - n, 1); }
+  function parseYmd(s) { var p = s.split("-"); return new Date(+p[0], +p[1] - 1, +p[2], 12); }
+  function dayNumber() {
+    if (!cig.start) return 0;
+    var now = new Date(); now.setHours(12, 0, 0, 0);
+    return Math.round((now - parseYmd(cig.start)) / 86400000) + 1;
+  }
+  function saveCig() {
+    if (!db) return;
+    clearTimeout(cigTimer);
+    cigTimer = setTimeout(function () {
+      db.doc("cigarros/plano").set({ start: cig.start, counts: Object.assign({}, cig.counts) }).catch(writeErr);
+    }, 700);
+  }
+  $("#cig-date").value = ymd(new Date());
+  $("#cig-go").addEventListener("click", function () {
+    var v = $("#cig-date").value; if (!v) return;
+    cig = { start: v, counts: {} }; renderCig(); saveCig();
+  });
+  function bump(delta) {
+    var n = dayNumber(); if (n < 1 || n > PLAN_DAYS) return;
+    var cur = cig.counts[n] || 0;
+    cig.counts[n] = Math.max(cur + delta, 0); renderCig(); saveCig();
+  }
+  $("#cig-plus").addEventListener("click", function () { bump(1); });
+  $("#cig-minus").addEventListener("click", function () { bump(-1); });
+  $("#cig-reset").addEventListener("click", function () {
+    if (!cigResetArmed) { cigResetArmed = true; this.textContent = "Confirmar: apagar o plano"; this.classList.add("confirm"); return; }
+    cigResetArmed = false; this.textContent = "Recomeçar plano"; this.classList.remove("confirm");
+    cig = { start: null, counts: {} }; renderCig();
+    if (db) { clearTimeout(cigTimer); db.doc("cigarros/plano").delete().catch(writeErr); }
+  });
+  function renderCig() {
+    var has = !!cig.start;
+    $("#cig-start").hidden = has;
+    var run = $("#cig-run"); run.hidden = !has; run.style.display = has ? "flex" : "";
+    if (!has) return;
+    var n = dayNumber();
+    var counter = $("#cig-counter");
+    if (n < 1) {
+      $("#cig-day").textContent = "Começa em " + fmt(parseYmd(cig.start));
+      $("#cig-limit").textContent = "Dia 1: até 30";
+      counter.hidden = true; $("#cig-msg").textContent = "O contador aparece no primeiro dia.";
+    } else if (n > PLAN_DAYS) {
+      $("#cig-day").textContent = "Plano concluído";
+      $("#cig-limit").textContent = "Meta agora: zero";
+      counter.hidden = true; $("#cig-msg").textContent = "Você chegou ao fim dos 30 dias. Se precisar de apoio para manter o zero, o programa de tabagismo da UBS é gratuito.";
+    } else {
+      var lim = limitFor(n), c = cig.counts[n] || 0;
+      counter.hidden = false;
+      $("#cig-day").textContent = "Dia " + n + " de " + PLAN_DAYS;
+      $("#cig-limit").textContent = "Limite de hoje: " + lim;
+      $("#cig-count").textContent = c;
+      $("#cig-of").textContent = "de " + lim + " hoje";
+      counter.classList.toggle("over", c > lim);
+      $("#cig-msg").textContent = c > lim ? "Passou do limite hoje. Tudo bem: amanhã o plano segue igual, sem compensar." : (lim - c) + " restantes hoje. Toque + a cada cigarro.";
+    }
+    var box = $("#cig-days"); box.textContent = "";
+    var ok = 0, logged = 0;
+    for (var d = 1; d <= PLAN_DAYS; d++) {
+      var cell = el("div", "cig-cell");
+      var lim2 = limitFor(d), has2 = cig.counts[d] != null;
+      if (d === n) cell.className += " today";
+      if (d > n) cell.className += " future";
+      else if (has2 || d < n) {
+        var v = cig.counts[d] || 0; logged++;
+        if (v <= lim2) { cell.className += " ok"; ok++; } else cell.className += " over";
+      }
+      cell.appendChild(el("b", null, d <= n && (has2 || d < n) ? String(cig.counts[d] || 0) : String(lim2)));
+      cell.appendChild(el("span", null, "Dia " + d + (d <= n ? " · lim " + lim2 : "")));
+      box.appendChild(cell);
+    }
+    $("#cig-score").textContent = logged ? ok + " de " + logged + " dias dentro do limite" : "Primeiro dia do plano";
+  }
+
+  /* ---------- Overview ---------- */
+  var MONTHS = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  var allWeeks = {};
+  var monthOffset = 0;
+  var REAL = HABITS.filter(function (h) { return h.id; });
+  var WEEK_TOTAL = REAL.reduce(function (s, h) { return s + h.d.length; }, 0);
+
+  function weekChecks(monKey) {
+    if (monKey === ymd(mondayOf(weekOffset))) return checks;
+    return allWeeks[monKey] || {};
+  }
+  function cigDateOf(n) { var d = parseYmd(cig.start); d.setDate(d.getDate() + n - 1); return d; }
+
+  function weekStats(mon) {
+    var key = ymd(mon), ch = weekChecks(key);
+    var done = 0;
+    REAL.forEach(function (h) { h.d.forEach(function (i) { if (ch[h.id + "_" + i]) done++; }); });
+    var start = mon.getTime() - 12 * 3600000, end = start + 7 * 86400000;
+    var tasks = cards.filter(function (c) { return c.col === "done" && c.movedAt >= start && c.movedAt < end; }).length;
+    var cOk = 0, cLog = 0;
+    if (cig.start) {
+      var today = dayNumber();
+      for (var n = 1; n <= PLAN_DAYS && n <= today; n++) {
+        var t = cigDateOf(n).getTime();
+        if (t >= start && t < end && (n < today || cig.counts[n] != null)) { cLog++; if ((cig.counts[n] || 0) <= limitFor(n)) cOk++; }
+      }
+    }
+    return { done: done, total: WEEK_TOTAL, tasks: tasks, cOk: cOk, cLog: cLog, ch: ch };
+  }
+
+  function renderOverview() {
+    var base = new Date(); base.setHours(12, 0, 0, 0); base.setDate(1); base.setMonth(base.getMonth() + monthOffset);
+    var y = base.getFullYear(), m = base.getMonth();
+    $("#ov-label").textContent = MONTHS[m] + " " + y;
+    var mons = [];
+    var d = new Date(y, m, 1, 12); var dow = (d.getDay() + 6) % 7; d.setDate(d.getDate() - dow);
+    var lastDay = new Date(y, m + 1, 0, 12).getTime();
+    while (d.getTime() <= lastDay) { mons.push(new Date(d)); d.setDate(d.getDate() + 7); }
+    var thisMon = mondayOf(0).getTime();
+    var sumDone = 0, sumTotal = 0, sumTasks = 0, sumOk = 0, sumLog = 0;
+    var perHabit = {}; REAL.forEach(function (h) { perHabit[h.id] = { done: 0, total: 0 }; });
+    var box = $("#ov-weeks"); box.textContent = "";
+    var nWeek = 0;
+    mons.forEach(function (mon) {
+      nWeek++;
+      var future = mon.getTime() > thisMon, current = mon.getTime() === thisMon;
+      var s = weekStats(mon);
+      if (!future) {
+        sumDone += s.done; sumTotal += s.total; sumTasks += s.tasks; sumOk += s.cOk; sumLog += s.cLog;
+        REAL.forEach(function (h) { h.d.forEach(function (i) { perHabit[h.id].total++; if (s.ch[h.id + "_" + i]) perHabit[h.id].done++; }); });
+      }
+      var sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+      var row = el("div", "ov-week" + (current ? " current" : "") + (future ? " future" : ""));
+      var lab = el("div"); lab.appendChild(el("b", null, "Semana " + nWeek)); lab.appendChild(el("small", null, fmt(mon) + " a " + fmt(sun) + (current ? " · em andamento" : "")));
+      row.appendChild(lab);
+      var pct = future ? 0 : Math.round(s.done / s.total * 100);
+      var bw = el("div", "ov-bar-wrap"); var bar = el("div", "ov-bar"); var fill = el("i"); fill.style.width = pct + "%"; bar.appendChild(fill);
+      bw.appendChild(el("small", null, "Rotina")); bw.appendChild(bar); bw.appendChild(el("span", null, future ? "—" : pct + "%"));
+      row.appendChild(bw);
+      var st1 = el("div", "ov-stat"); st1.appendChild(el("b", null, future ? "—" : String(s.tasks))); st1.appendChild(el("small", null, "tarefas feitas")); row.appendChild(st1);
+      var st2 = el("div", "ov-stat"); st2.appendChild(el("b", null, future || !s.cLog ? "—" : s.cOk + "/" + s.cLog)); st2.appendChild(el("small", null, "dias no limite")); row.appendChild(st2);
+      box.appendChild(row);
+    });
+    var tiles = $("#ov-tiles"); tiles.textContent = "";
+    function tile(label, val, sub) { var t = el("div", "ov-tile"); t.appendChild(el("span", null, label)); t.appendChild(el("strong", null, val)); t.appendChild(el("small", null, sub)); tiles.appendChild(t); }
+    tile("Rotina no mês", sumTotal ? Math.round(sumDone / sumTotal * 100) + "%" : "—", sumDone + " de " + sumTotal + " hábitos marcados");
+    tile("Tarefas concluídas", String(sumTasks), "cartões que chegaram em Feito");
+    tile("Cigarros", sumLog ? sumOk + "/" + sumLog : "—", sumLog ? "dias dentro do limite" : "plano ainda sem dias neste mês");
+    var hb = $("#ov-habits"); hb.textContent = "";
+    REAL.forEach(function (h) {
+      var p = perHabit[h.id]; var pc = p.total ? Math.round(p.done / p.total * 100) : 0;
+      var w = el("div", "ov-habit"); var top = el("div"); top.appendChild(el("b", null, h.t)); top.appendChild(el("span", null, p.done + "/" + p.total)); w.appendChild(top);
+      var bar = el("div", "ov-bar"); var f = el("i"); f.style.width = pc + "%"; bar.appendChild(f); w.appendChild(bar);
+      hb.appendChild(w);
+    });
+  }
+  $("#ov-prev").addEventListener("click", function () { monthOffset--; renderOverview(); });
+  $("#ov-next").addEventListener("click", function () { monthOffset++; renderOverview(); });
+
+  var _rb = renderBoard; renderBoard = function () { _rb(); renderOverview(); };
+  var _rg = renderGrid; renderGrid = function () { _rg(); renderOverview(); };
+  var _rc = renderCig; renderCig = function () { _rc(); renderOverview(); };
+
+  renderBoard();
+  renderGrid();
+  renderCig();
+
+  /* ---------- Store ---------- */
+  var cl = window.claude;
+  if (!cl || !cl.use) { showNotice("Abra esta página pelo Claude para salvar o quadro. Aqui as mudanças somem ao recarregar."); return; }
+  cl.use("db").then(function (got) {
+    if (!got) { showNotice("Não deu para conectar o armazenamento agora. As mudanças desta visita não serão salvas."); return; }
+    db = got;
+    db.collection("cards").onSnapshot(function (snap) {
+      cards = snap.docs.map(function (d) { var x = Object.assign({}, d.data()); x.id = d.id; return x; });
+      renderBoard();
+    }, function () { showNotice("O kanban parou de sincronizar. Recarregue a página."); });
+    watchWeek();
+    db.collection("weeks").onSnapshot(function (snap) {
+      allWeeks = {};
+      snap.docs.forEach(function (d) { var x = d.data(); allWeeks[d.id] = x && x.checks ? x.checks : {}; });
+      renderOverview();
+    }, function () {});
+    db.doc("cigarros/plano").onSnapshot(function (snap) {
+      if (cigTimer && snap.metadata && snap.metadata.hasPendingWrites) return;
+      var d = snap.exists ? snap.data() : null;
+      cig = d && d.start ? { start: d.start, counts: Object.assign({}, d.counts || {}) } : { start: null, counts: {} };
+      renderCig();
+    }, function () { showNotice("O contador de cigarros parou de sincronizar. Recarregue a página."); });
+  });
+})();
+</script>
+
+</body>
+</html>
